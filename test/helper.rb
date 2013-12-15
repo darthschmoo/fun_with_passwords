@@ -12,7 +12,19 @@ require 'shoulda'
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(File.dirname(__FILE__))
+
 require 'fun_with_passwords'
 
 class Test::Unit::TestCase
+end
+
+class FunWith::Passwords::TestCase < Test::Unit::TestCase
+  include FunWith::Passwords
+  def tmpdir( &block )
+    FunWith::Files::FilePath.tmpdir do |tmp|
+      @tmpdir = tmp
+      warn( "temporary dir not writable.  Some tests may fail." ) unless @tmpdir.directory? && @tmpdir.writable?
+      yield
+    end
+  end
 end
