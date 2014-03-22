@@ -17,12 +17,13 @@ Jeweler::Tasks.new do |gem|
   gem.name = "fun_with_passwords"
   gem.homepage = "http://github.com/darthschmoo/fun_with_passwords"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = "Create an encrypted password store that your scripts can access."
+  gem.description = "Because passwords are obnoxious."
   gem.email = "keeputahweird@gmail.com"
   gem.authors = ["Bryce Anderson"]
   # dependencies defined in Gemfile
 end
+
 Jeweler::RubygemsDotOrgTasks.new
 
 require 'rake/testtask'

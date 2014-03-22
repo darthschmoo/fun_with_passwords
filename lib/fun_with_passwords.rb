@@ -5,7 +5,6 @@ require 'highline/import'
 require 'xdg'
 require 'openssl'
 require 'yaml'
-require 'readline'
 
 module FunWith
   module Passwords
@@ -13,7 +12,7 @@ module FunWith
 end
 
 FunWith::Files::RootPath.rootify( FunWith::Passwords, __FILE__.fwf_filepath.dirname.up )
-FunWith::VersionStrings.versionize( FunWith::Passwords, FunWith::Passwords.root("VERSION").read )
+FunWith::VersionStrings.versionize( FunWith::Passwords )
 
 FunWith::Passwords.root( "lib","fun_with" ).requir
 

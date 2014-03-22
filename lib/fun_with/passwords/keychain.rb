@@ -5,12 +5,18 @@ module FunWith
       
       attr_accessor :file_store
       
-      def initialize( opts = {} ) 
-        file = opts[:file]
-        keys = opts[:keys] || {}
-        @file_store = FileStore.new( file ) if file
-        @master_key = opts[:master_key] || Console.ask_for_master_key
-        set_keys( keys )
+      # Load an existing
+      def self.load( master_key, opts = {} )
+        file = opts[:file] || FileStore.default_file
+        master_key = Console.new.ask_for_master_key if master_key == :new
+        self.new( :file => file, :master_key => master_key ).unlock
+      end
+      
+      def initialize( opts = {} )
+        @options = opts
+        set_keys
+        set_master_key
+        set_file_store
       end
       
       # if no new master key is given, save with the old one.
@@ -18,6 +24,8 @@ module FunWith
         @master_key = master_key if master_key
         if @file_store
           @file_store.save( @keys.to_yaml, @master_key )
+        else
+          false
         end
       end
       
@@ -27,74 +35,48 @@ module FunWith
         if @file_store
           set_keys( @file_store.unlock( @master_key ) )
         end
+        
+        self
       end
       
+      def set_options
+        if @opts[:interactive]
+          @ask_on_fail = true
+        end
+      end
+      
+      # After @keys is set, subsequent set_keys(nil) calls have no effect.
       def set_keys( hash = nil )
         if hash
           @keys = hash
+        else
+          @keys ||= @options[:keys] || {}
+          @options.delete(:keys)
         end
       end
       
-      def []=( key, password )
-        keystack = key.split(NAMESPACE_CHAR)
-
-        hash = @keys
-        
-        while true
-          key = keystack.shift
-          val = hash[key]
-          if val.nil?
-            if keystack.length == 0
-              hash[key] = password
-              return password
-            else
-              hash[key] = {}
-              hash = hash[key]
-            end
-          elsif val.is_a?(Hash)
-            if keystack.length == 0
-              warn( "trying to overwrite existing hash with a password" )
-              hash[key] = password
-              return password
-            else
-              hash = val
-            end
-          elsif val.is_a?(String)
-            if keystack.length == 0  # perfect
-              hash[key] = password
-              return password
-            else
-              warn( "overwriting existing password with a hash" )
-              hash[key] = {}
-              hash = hash[key]
-            end
-          end
+      def set_master_key( key = nil )
+        if key
+          @master_key = key
+        else
+          @master_key ||= @options.delete(:master_key)
+          @master_key ||= Console.new.ask_for_master_key if @ask_on_fail
         end
       end
 
-      def []( key, ask_on_fail = true )
-        puts "HUNTING FOR KEY:  #{key}  in #{@keys}"
-        keystack = key.split(NAMESPACE_CHAR)
-        
-        hash = @keys.clone
-        password = nil
-        
-        while password.nil?
-          key = keystack.shift
-          val = hash[key]
-          
-          puts "pass: #{password.inspect} ; key: #{key.inspect} ; val: #{val.inspect}"
-          break if val.nil?
-          
-          if keystack.length == 0
-            password = val
-          else
-            hash = hash[key]
-          end
-        end
-        
-        if !password && ask_on_fail
-          password = Console.ask_for_password( key )
+      def set_file_store
+        @file_store = FileStore.new( @options[:file] ) if @options[:file]
+      end
+      
+      def []=( key, password )
+        @keys[key] = password
+      end
+
+      def []( key )
+        password = @keys[key]
+                
+        if !password && @ask_on_fail
+          password = Console.new.ask_for_password( key )
           self[key] = password  
         end
         
@@ -102,37 +84,21 @@ module FunWith
       end
       
       def each( &block )
-        rval = self.keys_depth_first( @keys, [] )
-        
         if block_given?
-          rval.each do |item|
-            yield item
-          end
+          @keys.each(&block)
         else
-          rval.each
+          @keys.each
         end
+      end
+      
+      def delete( key )
+        @keys.delete( key )
       end
       
       def printout
         self.each do |key, password|
           puts "#{key}: #{password}"
         end
-      end
-      
-      protected
-      def keys_depth_first( hash, stack )
-        rval = []
-        
-        for key, val in hash
-          if val.is_a?(String)
-            key_as_string = (stack + [key]).join(NAMESPACE_CHAR)
-            rval << [key_as_string, val]
-          else
-            rval += keys_depth_first( val, stack + [key] )
-          end
-        end
-        
-        rval
       end
     end
   end

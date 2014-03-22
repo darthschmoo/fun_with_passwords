@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+require_relative File.join( "..", "lib", "fun_with_passwords" )
+
+FunWith::Passwords::CommandLine.new( ARGV ).run
+

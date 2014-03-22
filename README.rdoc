@@ -1,6 +1,9 @@
 = fun_with_passwords
 
-Description goes here.
+Creates an encrypted password store that your applications can access.
+
+Keychain.
+
 
 == Contributing to fun_with_passwords
  

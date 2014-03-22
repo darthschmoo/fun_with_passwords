@@ -1,19 +1,13 @@
 require 'helper'
 
 class TestKeychain < FunWith::Passwords::TestCase
-  KEYHASH = { "hey" => { 
-                "sailor" => "password" 
-              }, 
-              "orangutan" => "marigold",
-              "hitch" => {
-                "hiker" => {
-                  "steve" => "hoboname"
-                }
-              }
+  KEYHASH = { "hey:sailor" => "password",
+              "orangutan"  => "marigold",
+              "hitch:hiker:steve" => "hoboname"
             }
   
   def setup
-    @keychain = Keychain.new( :keys => KEYHASH, :master_key => "master_key" )
+    @keychain = Keychain.new( :keys => KEYHASH.clone, :master_key => "master_key" )
   end
          
   should "get the correct keys" do
@@ -43,15 +37,16 @@ class TestKeychain < FunWith::Passwords::TestCase
   should "write passwords to a file and read them back" do
     tmpdir do
       assert @keychain.file_store.nil?
-      @keychain.file_store = FileStore.new(@tmpdir)
       pwfile = @tmpdir.join("password_store.aes256.dat")
+      assert !pwfile.exist?
+      
+      @keychain.file_store = FileStore.new(@tmpdir)
       assert_equal( pwfile, @keychain.file_store.password_file )
-      assert !@keychain.file_store.password_file.exist?
       
       @keychain.save
       assert @keychain.file_store.password_file.exist?
 
-      @keychain = Keychain.new( :file => pwfile, :master_key => "master_key" )
+      @keychain = Keychain.load( "master_key", :file => pwfile )
       @keychain.unlock
       
       assert_equal( "password", @keychain["hey:sailor"] )

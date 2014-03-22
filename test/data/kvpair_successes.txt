@@ -1,0 +1,9 @@
+k=v|k|v
+key=value|key|value
+'key'='value'|key|value
+key='value'|key|value
+key="value"|key|value
+"key"=value|key|value
+"key"='value'|key|value
+"site=flow.xmission.com"='xjJ3~=""'|site=flow.xmission.com|xjJ3~=""
+godzilla:v:tokyo="&&^32='*h<>!="|godzilla:v:tokyo|&&^32='*h<>!=
